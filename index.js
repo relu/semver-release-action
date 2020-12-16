@@ -14,12 +14,16 @@ async function getMostRecentRepoTag() {
     namespace: 'tags/'
   })
 
-  const prx = new RegExp(`^${prefix}`,'g');
+  const prx = new RegExp(`^${prefix}`);
   const versions = refs
-    .map(ref => ref.ref.replace(/^refs\/tags\//g, '').replace(prx, ''))
+    .map(item => item.ref.replace(/^refs\/tags\//g, ''))
+    .filter(tag => tag.match(prx))
+    .map(tag => tag.replace(prx, ''))
     .map(tag => semver.parse(tag, { loose: true }))
     .filter(version => version !== null)
     .sort(semver.rcompare)
+
+  console.log(`Versions: ${versions}`);
 
   return versions[0] || semver.parse('0.0.0')
 }
@@ -43,7 +47,7 @@ async function getMostRecentBranchTag() {
     console.log(err)
     process.exit(exitCode)
   }
-  exitCode = await exec.exec('git', ['tag', '--no-column', '--merged'], options)
+  exitCode = await exec.exec('git', ['tag', '--no-column', '--merged', '--list', `${prefix}*`], options)
   if (exitCode != 0) {
     console.log(err)
     process.exit(exitCode)
