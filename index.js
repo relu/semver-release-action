@@ -11,19 +11,17 @@ async function getMostRecentRepoTag() {
 
   const { data: refs } = await octokit.git.listMatchingRefs({
     ...github.context.repo,
-    namespace: 'tags/'
+    namespace: `tags/${prefix}`
   })
 
   const prx = new RegExp(`^${prefix}`);
   const versions = refs
     .map(item => item.ref.replace(/^refs\/tags\//g, ''))
-    .filter(tag => tag.match(prx))
+    //.filter(tag => tag.match(prx))
     .map(tag => tag.replace(prx, ''))
     .map(tag => semver.parse(tag, { loose: true }))
     .filter(version => version !== null)
     .sort(semver.rcompare)
-
-  console.log(`Versions: ${versions}`);
 
   return versions[0] || semver.parse('0.0.0')
 }
